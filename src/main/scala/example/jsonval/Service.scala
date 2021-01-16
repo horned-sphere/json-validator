@@ -15,16 +15,57 @@
 package example.jsonval
 
 import cats.effect.IO
+import example.jsonval.response.{SchemaResponse, ValidationResponse}
+import io.circe.Json
+import io.circe.generic.auto._
 import org.http4s._
+import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
+import org.http4s.circe._
 import org.http4s.dsl.io._
-import org.http4s.implicits._
 
 object Service {
 
-  def service(store: SchemaStore): HttpRoutes[IO] = HttpRoutes.of[IO] {
-    case GET -> Root / "schema" / name => IO(Response(Status.Ok))
-    case request @ POST -> Root / "schema" / name => IO(Response(Status.Ok))
-    case request @ POST -> Root / "validate" / name => IO(Response(Status.Ok))
+  def service(store: SchemaStore, validator: Validator): HttpRoutes[IO] = HttpRoutes.of[IO] {
+    case GET -> Root / "schema" / name =>
+      store.get(name).compile.lastOrError.flatMap {
+        case Right(Some(json)) => Ok(json)
+        case _ => NotFound(SchemaResponse.schemaNotFound(name))
+      }
+    case request @ POST -> Root / "schema" / name =>
+      request.attemptAs[Json].fold(
+        _ => BadRequest(SchemaResponse.badUpload(name)),
+        schema => uploadSchema(store, name, schema)
+      ).flatMap(identity)
+    case request @ POST -> Root / "validate" / name =>
+      request.attemptAs[Json].fold(
+        _ => BadRequest(ValidationResponse.invalidJson(name)),
+        document => validateDocument(store, validator, name, document)
+      ).flatMap(identity)
+      IO(Response(Status.Ok))
+  }
+
+  def uploadSchema(store: SchemaStore,
+                   name: String,
+                   schema: Json): IO[Response[IO]] = {
+    store.insert(name, schema).compile.lastOrError.flatMap {
+      case Left(err) => InternalServerError(SchemaResponse.failedUpload(name, err))
+      case _ => Ok(SchemaResponse.goodUpload(name))
+    }
+  }
+
+  def validateDocument(store: SchemaStore,
+                       validator: Validator,
+                       name: String,
+                       document: Json):  IO[Response[IO]] = {
+    store.get(name).compile.lastOrError.flatMap {
+      case Right(Some(schema)) =>
+        validator.validate(schema, document) match {
+          case Left(InvalidSchema(message)) => InternalServerError(ValidationResponse.badSchema(name, message))
+          case Left(ValidationFailed(messages)) => BadRequest(ValidationResponse.failed(name, messages))
+          case _ => Ok(ValidationResponse.valid(name))
+        }
+      case _ => NotFound(SchemaResponse.schemaNotFound(name))
+    }
   }
 
 }
