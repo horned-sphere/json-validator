@@ -8,6 +8,7 @@ val Http4sVersion = "0.21.15"
 val CirceVersion = "0.13.0"
 val JsonSchemaValidatorVersion = "2.2.14"
 val Fs2BlobstoreVersion = "0.7.3"
+val ScoptVersion = "4.0.0"
 
 libraryDependencies ++= Seq (
   "org.http4s"      %% "http4s-blaze-server" % Http4sVersion,
@@ -16,5 +17,6 @@ libraryDependencies ++= Seq (
   "io.circe"        %% "circe-generic"       % CirceVersion,
   "io.circe"        %% "circe-fs2"       % CirceVersion,
   "com.github.java-json-tools" % "json-schema-validator" % JsonSchemaValidatorVersion,
-  "com.github.fs2-blobstore" %% "core"  % Fs2BlobstoreVersion
+  "com.github.fs2-blobstore" %% "core"  % Fs2BlobstoreVersion,
+  "com.github.scopt" %% "scopt" % ScoptVersion
 )
