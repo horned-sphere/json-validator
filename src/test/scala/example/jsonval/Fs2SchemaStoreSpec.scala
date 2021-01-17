@@ -20,18 +20,18 @@ import weaver.IOSuite
 
 import java.nio.file.{Files, Path}
 
-object StoreSpec extends IOSuite {
-  override type Res = SchemaStore
+object Fs2SchemaStoreSpec extends IOSuite {
+  override type Res = Fs2SchemaStore
 
   def makeTemp(): IO[Path] = {
     IO(Files.createTempDirectory("store"))
   }
 
-  override def sharedResource: Resource[IO, SchemaStore] = {
+  override def sharedResource: Resource[IO, Fs2SchemaStore] = {
     for {
       storePath <- Resource.liftF(makeTemp())
       blocker <- Blocker[IO]
-      store = SchemaStore.create(storePath, blocker)
+      store = Fs2SchemaStore.create(storePath, blocker)
     } yield store
   }
 
@@ -54,7 +54,7 @@ object StoreSpec extends IOSuite {
     } yield expect(result == Right(()))
   }
 
-  def insertAndGet(store: SchemaStore): IO[Either[String, Option[Json]]] = {
+  def insertAndGet(store: Fs2SchemaStore): IO[Either[String, Option[Json]]] = {
     store.insert(GoodName, Examples.ValidSchema).flatMap {
       case Left(err) => IO.pure(Left(err))
       case _ => store.get(GoodName)

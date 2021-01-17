@@ -60,7 +60,7 @@ object ServerApp extends IOApp {
           case Right((port, storePath)) =>
             val app = for {
               blocker <- Blocker[IO]
-              store = SchemaStore.create(storePath, blocker)
+              store = Fs2SchemaStore.create(storePath, blocker)
               app = Service.service(store, Validator.default())
               server <- BlazeServerBuilder[IO](global)
                 .bindHttp(port)
