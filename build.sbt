@@ -11,6 +11,7 @@ val Fs2BlobstoreVersion = "0.7.3"
 val ScoptVersion = "4.0.0"
 val ScalatestVersion = "3.0.8"
 val WeaverVersion = "0.5.1"
+val Slf4jVersion = "1.7.30"
 
 libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
@@ -23,7 +24,8 @@ libraryDependencies ++= Seq(
   "com.github.fs2-blobstore" %% "core" % Fs2BlobstoreVersion,
   "com.github.scopt" %% "scopt" % ScoptVersion,
   "org.scalatest" %% "scalatest" % ScalatestVersion % Test,
-  "com.disneystreaming" %% "weaver-framework" % WeaverVersion % Test
+  "com.disneystreaming" %% "weaver-framework" % WeaverVersion % Test,
+  "org.slf4j" % "slf4j-simple" % Slf4jVersion
 )
 
 testFrameworks += new TestFramework("weaver.framework.TestFramework")

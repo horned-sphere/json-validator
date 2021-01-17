@@ -23,7 +23,11 @@ import scopt.{OParserBuilder, Read}
 
 import java.nio.file.Path
 import scala.concurrent.ExecutionContext.global
+import scala.util.{Failure, Success, Try}
 
+/**
+ * Basic application to start a web server hosting the schema service.
+ */
 object ServerApp extends IOApp {
 
   implicit val shortRead: Read[Short] = reads { str =>
@@ -38,62 +42,56 @@ object ServerApp extends IOApp {
     OParser.sequence(
       programName("json-validator"),
       head("json-validator", "0.1"),
-      opt[Short]('p', "foo")
+      opt[Short]('p', "port")
         .action((p, c) => c.copy(port = p))
         .required()
-        .text("The port to bind to"),
+        .text("The port to bind to.")
+        .validate(p => if (p > 0) success else failure("Port must be positive.")),
       opt[String]('s', "storePath")
         .action((p, c) => c.copy(storePath = p))
         .required()
-        .text("The port to bind to"),
+        .validate(p => {
+          Try {
+            val path = Path.of(p)
+            val file = path.toFile
+            if (file.exists() && file.isDirectory)
+              success
+            else
+              failure("The store path must exist and be a directory.")
+          } match {
+            case Success(result) => result
+            case Failure(t) =>failure(s"Error accessing store path: ${t.getMessage}")
+          }
+        })
+        .text("Filesystem path for the schema store. This should exist and be (initially) empty an writeable."),
     )
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
 
-
     IO(OParser.parse(configParser, args, AppConfig())).flatMap {
       case Some(config) =>
+        val storePath = Path.of(config.storePath)
+        val app = for {
+          blocker <- Blocker[IO]
+          store = Fs2SchemaStore.create(storePath, blocker)
+          app = SchemaService.service(store, Validator.default())
+          server <- BlazeServerBuilder[IO](global)
+            .bindHttp(config.port)
+            .withHttpApp(Router("/" -> app).orNotFound)
+            .resource
+        } yield server
 
-        config.validate().flatMap {
-          case Left(err) => IO(println(err)) *> IO.pure(ExitCode.Error)
-          case Right((port, storePath)) =>
-            val app = for {
-              blocker <- Blocker[IO]
-              store = Fs2SchemaStore.create(storePath, blocker)
-              app = SchemaService.service(store, Validator.default())
-              server <- BlazeServerBuilder[IO](global)
-                .bindHttp(port)
-                .withHttpApp(Router("/" -> app).orNotFound)
-                .resource
-            } yield server
-
-            app.use(_ => IO.never).as(ExitCode.Success)
-        }
+        app.use(_ => IO.never).as(ExitCode.Success)
       case _ => IO.pure(ExitCode.Error)
     }
 
   }
 }
 
-
-final case class AppConfig(port: Short = 8080, storePath: String = "") {
-
-  def validate(): IO[Either[String, (Short, Path)]] = if (port <= 0) {
-    IO.pure(Left("Port must be positive."))
-  } else {
-    IO({
-      val path = Path.of(storePath)
-      (path, path.toFile)
-    }).attempt.map {
-      case Left(err) => Left(err.getMessage)
-      case Right((path, file)) =>
-        if (!file.exists() || !file.isDirectory) {
-          Left(s"Store path $storePath is not a directory.")
-        } else {
-          Right((port, path))
-        }
-    }
-  }
-
-}
+/**
+ * Configuration type to hold the arguments to the application.
+ * @param port The port to bind the server to.
+ * @param storePath The file system path for the schema store. This should exist, be initially empty and be writeable.
+ */
+final case class AppConfig(port: Short = 8080, storePath: String = "")
