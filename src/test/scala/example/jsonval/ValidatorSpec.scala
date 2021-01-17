@@ -45,7 +45,7 @@ class ValidatorSpec extends WordSpec with Matchers with Inside {
 
       val validator = Validator.default()
 
-      val result = validator.validate(Examples.ValidSchema, Examples.BadJson)
+      val result = validator.validate(Examples.ValidSchema, Examples.BadDocument)
 
       inside(result) {
         case Left(ValidationFailed(messages)) =>

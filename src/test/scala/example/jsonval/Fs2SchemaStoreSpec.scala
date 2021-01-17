@@ -64,9 +64,8 @@ object Fs2SchemaStoreSpec extends IOSuite {
   test("insert and get") { store =>
     for {
       insertResult <- insertAndGet(store)
-    } yield expect(insertResult match {
-      case Right(Some(doc)) => doc == Examples.GoodDocument
-      case _ => false
-    })
+    } yield {
+      expect(insertResult == Right(Some(Examples.ValidSchema)))
+    }
   }
 }

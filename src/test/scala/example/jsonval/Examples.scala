@@ -101,6 +101,6 @@ object Examples {
               }
             }"""
 
-  val BadJson: Json = json"""{ "arbitrary": "nonsense" }"""
+  val BadDocument: Json = json"""{ "arbitrary": "nonsense" }"""
 
 }
