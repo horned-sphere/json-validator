@@ -49,7 +49,7 @@ object Service {
                    schema: Json): IO[Response[IO]] = {
     store.insert(name, schema).compile.lastOrError.flatMap {
       case Left(err) => InternalServerError(SchemaResponse.failedUpload(name, err))
-      case _ => Ok(SchemaResponse.goodUpload(name))
+      case _ => Created(SchemaResponse.goodUpload(name))
     }
   }
 
