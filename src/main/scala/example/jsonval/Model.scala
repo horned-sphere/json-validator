@@ -61,7 +61,7 @@ object Model {
       } else fields
       val node = factory.objectNode()
       it.foreach {
-        case (name, value) => node.set(name, value.foldWith(this))
+        case (name, value) => node.replace(name, value.foldWith(this))
       }
       node
     }
