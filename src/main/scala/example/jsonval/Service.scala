@@ -26,7 +26,7 @@ object Service {
 
   def service(store: SchemaStore, validator: Validator): HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "schema" / name =>
-      store.get(name).compile.lastOrError.flatMap {
+      store.get(name).flatMap {
         case Right(Some(json)) => Ok(json)
         case _ => NotFound(SchemaResponse.schemaNotFound(name))
       }
@@ -46,7 +46,7 @@ object Service {
   def uploadSchema(store: SchemaStore,
                    name: String,
                    schema: Json): IO[Response[IO]] = {
-    store.insert(name, schema).compile.lastOrError.flatMap {
+    store.insert(name, schema).flatMap {
       case Left(err) => InternalServerError(SchemaResponse.failedUpload(name, err))
       case _ => Created(SchemaResponse.goodUpload(name))
     }
@@ -56,7 +56,7 @@ object Service {
                        validator: Validator,
                        name: String,
                        document: Json):  IO[Response[IO]] = {
-    store.get(name).compile.lastOrError.flatMap {
+    store.get(name).flatMap {
       case Right(Some(schema)) =>
         validator.validate(schema, document) match {
           case Left(InvalidSchema(message)) => InternalServerError(ValidationResponse.badSchema(name, message))

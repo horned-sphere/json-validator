@@ -10,6 +10,7 @@ val JsonSchemaValidatorVersion = "2.2.14"
 val Fs2BlobstoreVersion = "0.7.3"
 val ScoptVersion = "4.0.0"
 val ScalatestVersion = "3.0.8"
+val WeaverVersion = "0.5.1"
 
 libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
@@ -17,10 +18,13 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-dsl" % Http4sVersion,
   "io.circe" %% "circe-fs2" % CirceVersion,
   "io.circe" %% "circe-literal" % CirceVersion,
-  "io.circe" %% "circe-parser" % CirceVersion % "test",
+  "io.circe" %% "circe-parser" % CirceVersion % Test,
   "com.github.java-json-tools" % "json-schema-validator" % JsonSchemaValidatorVersion,
   "com.github.fs2-blobstore" %% "core" % Fs2BlobstoreVersion,
   "com.github.scopt" %% "scopt" % ScoptVersion,
-  "org.scalatest" %% "scalatest" % ScalatestVersion % "test"
+  "org.scalatest" %% "scalatest" % ScalatestVersion % Test,
+  "com.disneystreaming" %% "weaver-framework" % WeaverVersion % Test
 )
+
+testFrameworks += new TestFramework("weaver.framework.TestFramework")
 
