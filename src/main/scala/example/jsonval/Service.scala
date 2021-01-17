@@ -17,7 +17,6 @@ package example.jsonval
 import cats.effect.IO
 import example.jsonval.response.{SchemaResponse, ValidationResponse}
 import io.circe.Json
-import io.circe.generic.auto._
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.circe._
