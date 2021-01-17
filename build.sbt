@@ -18,6 +18,7 @@ libraryDependencies ++= Seq (
   "io.circe"        %% "circe-generic"       % CirceVersion,
   "io.circe"        %% "circe-fs2"       % CirceVersion,
   "io.circe"        %% "circe-literal"       % CirceVersion % "test",
+  "io.circe"        %% "circe-parser"       % CirceVersion % "test",
   "com.github.java-json-tools" % "json-schema-validator" % JsonSchemaValidatorVersion,
   "com.github.fs2-blobstore" %% "core"  % Fs2BlobstoreVersion,
   "com.github.scopt" %% "scopt" % ScoptVersion,
